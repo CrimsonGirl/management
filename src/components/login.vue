@@ -67,6 +67,7 @@ export default {
       // console.log(this)
       this.$refs.loginFromRef.resetFields();
     },
+    // 点击登录按钮
     login() {
       this.$refs.loginFromRef.validate(async (valid) => {
         // console.log(valid)
@@ -77,8 +78,9 @@ export default {
           if (res.data.meta.status !== 200)
             return this.$message.error("登录失败☹");
           this.$message.success("登陆成功！");
+          // console.log(res)
           // 将登陆成功之后的token保存到客户端的sessionStorage中   ("键"，值)
-          window.sessionStorage.setItem("token", res.data.token);
+          window.sessionStorage.setItem("token", res.data.data.token);
           this.$router.push({
             path: '/Home',
           });
@@ -107,8 +109,6 @@ export default {
   height: 400px;
   background: #fff;
   border-radius: 5px;
-  // display: flex;
-  // justify-content: left;
   .demo-ruleForm {
     padding: 0 30px;
     position: absolute;

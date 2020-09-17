@@ -24,26 +24,26 @@ module.exports = {
             }
         }
     },
-    // 基本路径
-    publicPath: process.env.NODE_ENV === 'production'
-        ? './'
-        : '/smile-client/',
-    devServer: {
-        host: 'localhost',
-        port: 8080,
-        open: true,
-        hotOnly: true, // 热更新
-        proxy: {
-            '/smile-client': { // 本地mock服务器
-                target: 'http://192.168.1.17:8888',
-                changeOrigin: true,
-                ws: false,
-                pathRewrite:{
-                    '^/smile-client':''    //这里理解成用‘/smile-client'代替target里面的地址，后面组件中我们调接口时直接用api代替 比如我要调用'http://codetpx.lncwkj.com/xxx/duty?age=30'，可在axios的url中直接写‘smile-client/xxx/duty?age=30'即可
-                }                
-            }          
-        } // 设置代理
-    },
+    // // 基本路径
+    // publicPath: process.env.NODE_ENV === 'production'
+    //     ? './'
+    //     : '/',
+    // devServer: {
+    //     host: 'localhost',
+    //     port: 8080,
+    //     open: true,
+    //     hotOnly: false, // 热更新
+        // proxy: {
+        //     '/smile-client': { // 本地mock服务器
+        //         target: 'http://192.168.1.17:8888',
+        //         changeOrigin: true,
+        //         ws: false,
+        //         pathRewrite:{
+        //             '^/smile-client':''    //这里理解成用‘/smile-client'代替target里面的地址，后面组件中我们调接口时直接用api代替 比如我要调用'http://codetpx.lncwkj.com/xxx/duty?age=30'，可在axios的url中直接写‘smile-client/xxx/duty?age=30'即可
+        //         }                
+        //     }          
+        // } // 设置代理
+    // },
   
 
 }
