@@ -39,6 +39,7 @@ body{
 }
 #app{
   height: 100%;
+  min-width: 1366px;
 }
 .el-breadcrumb{
   margin-bottom: 20px;

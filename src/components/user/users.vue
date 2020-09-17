@@ -71,7 +71,12 @@
                       @click="clickChangeUserinfo(scope.row.id)"
                     ></el-button>
                     <!-- 操作  删除 -->
-                    <el-button type="danger" icon="el-icon-delete" size="mini" @click="click_userlist_deletedbutton(scope.row.id)"></el-button>
+                    <el-button
+                      type="danger"
+                      icon="el-icon-delete"
+                      size="mini"
+                      @click="click_userlist_deletedbutton(scope.row.id)"
+                    ></el-button>
                     <!-- 操作  角色分配 -->
                     <el-tooltip
                       class="item"
@@ -80,7 +85,12 @@
                       placement="top"
                       :enterable="false"
                     >
-                      <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
+                      <el-button
+                        type="warning"
+                        icon="el-icon-setting"
+                        size="mini"
+                        @click="show_role_dialog(scope.row)"
+                      ></el-button>
                     </el-tooltip>
                   </el-row>
                 </template>
@@ -125,7 +135,12 @@
         </span>
       </el-dialog>
       <!-- 修改用户信息的对话框 -->
-      <el-dialog title="修改信息" :visible.sync="changeUserinfo" width="50%" @close="close_change_userinfo">
+      <el-dialog
+        title="修改信息"
+        :visible.sync="changeUserinfo"
+        width="50%"
+        @close="close_change_userinfo"
+      >
         <el-form
           :model="findUserinfo"
           :rules="findUserinfoRules"
@@ -147,7 +162,29 @@
           <el-button type="primary" @click="click_changeUserInfo_yesbutton">确 定</el-button>
         </span>
       </el-dialog>
-     
+      <!-- 分配角色的对话框 -->
+      <el-dialog title="角色分配" :visible.sync="roleDialog" width="50%" @close="setRoleDialogClose">
+        <div>
+          <p>当前用户：{{userInfo.username}}</p>
+          <p>当前角色：{{userInfo.role_name}}</p>
+          <p>
+            分配新角色：
+            <el-select v-model="selectedRoleId" placeholder="请选择">
+              <el-option
+                v-for="item in rolesAllList"
+                :key="item.id"
+                :label="item.roleName"
+                :value="item.id"
+              ></el-option>
+            </el-select>
+          </p>
+        </div>
+
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="roleDialog = false">取 消</el-button>
+          <el-button type="primary" @click="click_roles_dialog_yesbutton">确 定</el-button>
+        </span>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -207,14 +244,20 @@ export default {
       },
       changeUserinfo: false, // 修改用户信息 的对话框  显示或隐藏
       findUserinfo: {
-          email:'',
-          mobile:''
+        email: "",
+        mobile: "",
       }, // 查询到的用户信息
-      findUserinfoRules:{
-          email:[{ required: true, message: "请输入邮箱", trigger: "blur" }],
-          mobile:[{ required: true, message: "请输入手机号码", trigger: "blur" }]
+      findUserinfoRules: {
+        email: [{ required: true, message: "请输入邮箱", trigger: "blur" }],
+        mobile: [
+          { required: true, message: "请输入手机号码", trigger: "blur" },
+        ],
       },
-      clickDeletedUser:false,  // 点击删除 用户信息 的对话框的显示和隐藏
+      clickDeletedUser: false, // 点击删除 用户信息 的对话框的显示和隐藏
+      roleDialog: false, // 角色分配 对话框 的 隐藏和显示
+      userInfo: {}, //  点击角色分配 角色分配对话框打开后 获取到的 用户信息
+      rolesAllList: [], // 所有 角色 数据
+      selectedRoleId:'',  // 被选中的 角色 id值
     };
   },
   created() {
@@ -251,7 +294,7 @@ export default {
       await this.$axios
         .put(`users/${scoperow.id}/state/${scoperow.mg_state}`)
         .then((res) => {
-        //   console.log(res);
+          //   console.log(res);
           if (res.data.meta.status !== 200) {
             scoperow.mg_state == !scoperow.mg_state;
           }
@@ -288,72 +331,91 @@ export default {
       });
     },
     // 修改信息 对话框 关闭时   resetFields()---重置
-    close_change_userinfo(){
-        this.$refs.findUserinfoRef.resetFields()
+    close_change_userinfo() {
+      this.$refs.findUserinfoRef.resetFields();
     },
     // 点击 修改框 确认按钮
-    click_changeUserInfo_yesbutton(){
-        this.$refs.findUserinfoRef.validate(async valid=>{
-            // console.log(valid)
-            if(!valid) return  // 不成功
-            // console.log(this.findUserinfo)
-            // 成功   然后发起 修改用户信息 的请求
-            await this.$axios.put('users/' + this.findUserinfo.id,{
-                email:this.findUserinfo.email,
-                mobile:this.findUserinfo.mobile
-            }).then(res=>{
-                console.log(res)
-            })
-            // 更新列表
-            this.userAPI();
-            // 关闭对话框
-            this.changeUserinfo = false
-        })
+    click_changeUserInfo_yesbutton() {
+      this.$refs.findUserinfoRef.validate(async (valid) => {
+        // console.log(valid)
+        if (!valid) return; // 不成功
+        // console.log(this.findUserinfo)
+        // 成功   然后发起 修改用户信息 的请求
+        await this.$axios
+          .put("users/" + this.findUserinfo.id, {
+            email: this.findUserinfo.email,
+            mobile: this.findUserinfo.mobile,
+          })
+          .then((res) => {
+            console.log(res);
+          });
+        // 更新列表
+        this.userAPI();
+        // 关闭对话框
+        this.changeUserinfo = false;
+      });
     },
     // 点击 用户列表的 删除按钮
-  async click_userlist_deletedbutton(id){
-    // this.clickDeletedUser = true
-     await this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then((res) => {
-          console.log(res)
+    async click_userlist_deletedbutton(id) {
+      // this.clickDeletedUser = true
+      await this.$confirm("此操作将永久删除该用户, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then((res) => {
+          console.log(res);
           this.$message({
-            type: 'success',
-            message: '删除成功!'
+            type: "success",
+            message: "删除成功!",
           });
-        }).catch(() => {
-          this.$message({
-            type: 'info',
-            message: '已取消删除'
-          });          
         })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消删除",
+          });
+        });
       // 点击确认删除  返回值为confirm
       // 点击取消  返回cancel
- 
-    this.$axios.delete('users/' + id).then(res=>{
-      console.log(res)
-      this.userAPI();
-    })
-    
+
+      this.$axios.delete("users/" + id).then((res) => {
+        console.log(res);
+        this.userAPI();
+      });
+    },
+    //  点击 用户列表 删除按钮 的 对话框 里面的 确定删除按钮
+    // click_deletedUser_dialog_yesbutton(){
+
+    // }
+    // 点击显示 角色分配的 对话框
+    async show_role_dialog(userInfos) {
+      // console.log(userInfos);
+      this.userInfo = userInfos;
+      // 获取所有角色列表
+      await this.$axios.get("roles").then((res) => {
+        // console.log(res);
+        this.rolesAllList = res.data.data;
+      });
+      this.roleDialog = true;
+    },
+    // 分配角色 对话框 中 确认按钮 事件
+    async click_roles_dialog_yesbutton(){
+      if(!this.selectedRoleId){
+        return this.$message.error('请选择要分配的角色')
+      }
+      await this.$axios.put(`users/${this.userInfo.id}/role`,{rid:this.selectedRoleId}).then(res=>{
+        console.log(res)
+        this.userAPI()
+      })
+      this.roleDialog = false
+    },
+    // 角色分配对话框关闭事件
+    setRoleDialogClose(){
+      this.selectedRoleId = ''
+      this.userInfo = {}
+    }
   },
-  //  点击 用户列表 删除按钮 的 对话框 里面的 确定删除按钮
-  // click_deletedUser_dialog_yesbutton(){
-    
-  // }
-
-
-
-
-
-
-
-
-
-
-  },
-  
 };
 </script>
 
