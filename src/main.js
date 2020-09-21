@@ -13,6 +13,12 @@ import '@/plugins/vant'
 // 全局引入Element UI
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
+
+import TreeTable from 'vue-table-with-tree-grid'
+
+
+
+
 Vue.use(ElementUI);
 
 import axios from 'axios';
@@ -31,6 +37,8 @@ Vue.prototype.$axios = axios
 import '@/assets/css/index.scss'
 
 Vue.config.productionTip = false
+
+Vue.component('tree-table',TreeTable)
 
 new Vue({
   router,
